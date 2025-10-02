@@ -1,32 +1,52 @@
-name: Build Android APK
 
-on: [push]
+name: Build Kebab App APK
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: Checkout repository
       uses: actions/checkout@v4
-      
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.8'
-        
-    - name: Install dependencies
+        python-version: '3.9'
+
+    - name: Install Buildozer dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y python3-pip openjdk-8-jdk zip
-        pip3 install buildozer
-        
+        sudo apt-get install -y \
+          build-essential \
+          git \
+          python3-pip \
+          openjdk-11-jdk \
+          zlib1g-dev \
+          libncurses5-dev \
+          libncursesw5-dev \
+          libtinfo5 \
+          unzip
+
+    - name: Install Buildozer
+      run: |
+        pip install --user buildozer
+        pip install --user cython
+
     - name: Build APK with Buildozer
       run: |
-        buildozer android debug
-        
-    - name: Upload APK
+        export PATH=$PATH:~/.local/bin/
+        buildozer -v android debug
+
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: kebab-inventory
+        name: kebab-inventory-apk
         path: bin/*.apk
+        retention-days: 7
